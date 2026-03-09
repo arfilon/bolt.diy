@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Bolt.diy - Offline AI Development with LM Studio"
+    />
+    <meta name="theme-color" content="#667eea" />
+    <title>Bolt.diy Offline</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+          Ubuntu, Cantarell, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+      }
+
+      .boot-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+        max-width: 500px;
+        width: 90%;
+      }
+
+      .boot-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .boot-header h1 {
+        color: #667eea;
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+
+      .boot-header p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        margin: 30px auto;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .status-container {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .status-line {
+        font-size: 13px;
+        color: #555;
+        font-family: 'Courier New', monospace;
+        margin: 5px 0;
+        text-align: left;
+      }
+
+      .status-line.success {
+        color: #27ae60;
+      }
+
+      .status-line.error {
+        color: #e74c3c;
+      }
+
+      .status-line.info {
+        color: #667eea;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #eee;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.3s ease;
+      }
+
+      .error-message {
+        background: #fee;
+        border: 1px solid #fcc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        color: #c33;
+        font-size: 13px;
+      }
+
+      .error-message strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .error-details {
+        background: #fff9f9;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 8px;
+        font-family: 'Courier New', monospace;
+        word-break: break-word;
+      }
+
+      .tip {
+        background: #e8f4f8;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #333;
+        text-align: left;
+        line-height: 1.6;
+      }
+
+      .tip strong {
+        color: #667eea;
+      }
+
+      .tip code {
+        background: #fff;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+      }
+
+      #root {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Loading screen styles */
+      .loading-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .loading-screen.hidden {
+        display: none;
+      }
+
+      /* App container */
+      .app-container {
+        width: 100%;
+        height: 100%;
+        display: none;
+      }
+
+      .app-container.visible {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="loading-screen" id="loading-screen">
+        <div class="boot-container">
+          <div class="boot-header">
+            <h1>🚀 Bolt.diy</h1>
+            <p>Offline AI Development with LM Studio</p>
+          </div>
+
+          <div class="loading-spinner"></div>
+
+          <div class="status-container">
+            <div class="status-line info" id="status-message">
+              Initializing WebContainers...
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="tip">
+            <strong>💡 Tip:</strong> Make sure LM Studio is running on your computer at
+            <code>http://127.0.0.1:1234</code> with CORS enabled
+          </div>
+
+          <div id="error-container" style="display: none">
+            <div class="error-message">
+              <strong id="error-title">Error initializing server:</strong>
+              <div class="error-details" id="error-details"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="app-container" id="app-container"></div>
+    </div>
+
+    <!-- Load React and app entry point -->
+    <script type="module">
+      // Global status update function
+      window.__bootStatus = {
+        updateStatus(message, type = 'info') {
+          const statusEl = document.getElementById('status-message');
+          if (statusEl) {
+            statusEl.textContent = message;
+            statusEl.className = 'status-line ' + type;
+          }
+        },
+        updateProgress(percent) {
+          const fillEl = document.getElementById('progress-fill');
+          if (fillEl) {
+            fillEl.style.width = percent + '%';
+          }
+        },
+        showError(title, details) {
+          const container = document.getElementById('error-container');
+          const titleEl = document.getElementById('error-title');
+          const detailsEl = document.getElementById('error-details');
+          if (container && titleEl && detailsEl) {
+            titleEl.textContent = title;
+            detailsEl.textContent = details;
+            container.style.display = 'block';
+          }
+        },
+        hideLoadingScreen() {
+          const loading = document.getElementById('loading-screen');
+          const appContainer = document.getElementById('app-container');
+          if (loading && appContainer) {
+            loading.classList.add('hidden');
+            appContainer.classList.add('visible');
+          }
+        },
+      };
+
+      // Import and run the offline entry point
+      import('/app/entry.offline.client.tsx')
+        .then(() => {
+          window.__bootStatus.updateStatus('✅ Application loaded', 'success');
+          window.__bootStatus.updateProgress(100);
+        })
+        .catch((error) => {
+          console.error('Failed to load app:', error);
+          window.__bootStatus.updateStatus('Failed to initialize', 'error');
+          window.__bootStatus.showError('Failed to load application', error.message);
+        });
+    </script>
+  </body>
+</html>

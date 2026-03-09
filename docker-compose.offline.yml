@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Offline Bolt.diy instance with LM Studio integration
+  bolt-offline:
+    build:
+      context: .
+      dockerfile: Dockerfile.offline
+    image: bolt-offline:latest
+    ports:
+      - '5173:5173'
+
+    # Use offline configuration
+    env_file:
+      - '.env.offline'
+
+    # Environment variables for offline mode
+    environment:
+      - NODE_ENV=production
+      - PORT=5173
+      - HOST=0.0.0.0
+      - LMSTUDIO_API_BASE_URL=http://host.docker.internal:1234
+      - VITE_LOG_LEVEL=info
+      - DEFAULT_NUM_CTX=8192
+      - RUNNING_IN_DOCKER=true
+
+    # Allow container to reach host machine services
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+    # Health check
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:5173/']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+    # Restart policy
+    restart: unless-stopped
+
+  # Optional: Development version with hot reload
+  bolt-offline-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    image: bolt-offline-dev:latest
+    ports:
+      - '5174:5173'
+
+    env_file:
+      - '.env.offline'
+
+    environment:
+      - NODE_ENV=development
+      - VITE_HMR_PROTOCOL=ws
+      - VITE_HMR_HOST=localhost
+      - VITE_HMR_PORT=5174
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - PORT=5173
+      - LMSTUDIO_API_BASE_URL=http://host.docker.internal:1234
+      - VITE_LOG_LEVEL=debug
+      - DEFAULT_NUM_CTX=8192
+      - RUNNING_IN_DOCKER=true
+
+    # Mount source code for hot reload
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+        consistency: cached
+      - /app/node_modules
+
+    # Allow container to reach host machine services
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+    # Run development server
+    command: pnpm run dev --host 0.0.0.0
+
+    profiles: ['dev']
