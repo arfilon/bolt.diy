@@ -13,6 +13,8 @@
   "scripts": {
     "deploy": "npm run build && wrangler pages deploy",
     "build": "remix vite:build",
+    "bundle:offline": "node scripts/bundle-offline-complete.mjs",
+    "build:offline:complete": "npm run build && npm run bundle:offline",
     "build:browser:offline": "npm run build && node scripts/build-html-offline.mjs",
     "build:offline": "npm run build && docker build -f Dockerfile.offline -t bolt-offline:latest .",
     "build:offline:fast": "docker build -f Dockerfile.offline -t bolt-offline:latest .",

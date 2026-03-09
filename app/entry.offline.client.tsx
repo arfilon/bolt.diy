@@ -23,8 +23,6 @@ function OfflineBootLoader() {
     progress: 0,
   });
 
-  const [webcontainerReady, setWebcontainerReady] = useState(false);
-
   useEffect(() => {
     let isMounted = true;
 
@@ -33,12 +31,14 @@ function OfflineBootLoader() {
         // Check WebContainers support
         if (typeof window === 'undefined' || !('WebContainer' in window)) {
           throw new Error(
-            'WebContainers API not supported in this browser. ' +
-            'Please use Chrome, Edge, or Firefox (version 121+).'
+            'WebContainers API not supported in this browser. ' + 'Please use Chrome, Edge, or Firefox (version 121+).',
           );
         }
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
+
         setBootStatus({
           status: 'booting',
           message: '⚙️  Booting WebContainers runtime...',
@@ -46,24 +46,29 @@ function OfflineBootLoader() {
         });
 
         // Boot WebContainers instance
-        const { WebContainer } = window;
+        const { WebContainer } = window as any;
         const webcontainer = await WebContainer.boot({
           coep: 'credentialless',
           workdirName: 'bolt-offline',
         });
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
+
         setBootStatus({
           status: 'mounting',
           message: '📦 Mounting project files...',
           progress: 50,
         });
 
-        // Mount necessary files (in a real implementation, these would be pre-packaged)
-        // For now, we'll use a placeholder setup
+        /*
+         * Mount necessary files (in a real implementation, these would be pre-packaged)
+         * For now, we'll use a placeholder setup
+         */
         await webcontainer.mount({
-          'app': { directory: {} },
-          'public': { directory: {} },
+          app: { directory: {} },
+          public: { directory: {} },
           'package.json': {
             file: {
               contents: JSON.stringify({
@@ -145,7 +150,10 @@ server.listen(5173, () => {
           },
         });
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
+
         setBootStatus({
           status: 'starting',
           message: '🚀 Starting offline server...',
@@ -162,22 +170,24 @@ server.listen(5173, () => {
               const output = chunk.toString();
               console.log('[WebContainer]', output);
             },
-          })
+          }),
         );
 
         // Give server time to start
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
+
         setBootStatus({
           status: 'ready',
           message: '✅ Offline server ready!',
           progress: 100,
         });
-
-        setWebcontainerReady(true);
       } catch (error) {
         console.error('Boot error:', error);
+
         if (isMounted) {
           setBootStatus({
             status: 'error',
@@ -220,9 +230,7 @@ server.listen(5173, () => {
         }}
       >
         <h1 style={{ color: '#667eea', marginBottom: '10px' }}>🚀 Bolt.diy</h1>
-        <p style={{ color: '#666', marginBottom: '30px', fontSize: '14px' }}>
-          Offline AI Development with LM Studio
-        </p>
+        <p style={{ color: '#666', marginBottom: '30px', fontSize: '14px' }}>Offline AI Development with LM Studio</p>
 
         <div
           style={{
@@ -268,13 +276,34 @@ server.listen(5173, () => {
         </div>
 
         {bootStatus.error && (
-          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: '8px', padding: '15px', marginTop: '20px', color: '#c33', fontSize: '13px' }}>
+          <div
+            style={{
+              background: '#fee',
+              border: '1px solid #fcc',
+              borderRadius: '8px',
+              padding: '15px',
+              marginTop: '20px',
+              color: '#c33',
+              fontSize: '13px',
+            }}
+          >
             <strong>Error:</strong>
             <div style={{ marginTop: '8px', textAlign: 'left' }}>{bootStatus.error}</div>
           </div>
         )}
 
-        <div style={{ background: '#e8f4f8', borderLeft: '4px solid #667eea', padding: '15px', marginTop: '20px', borderRadius: '4px', fontSize: '12px', color: '#333', textAlign: 'left' }}>
+        <div
+          style={{
+            background: '#e8f4f8',
+            borderLeft: '4px solid #667eea',
+            padding: '15px',
+            marginTop: '20px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            color: '#333',
+            textAlign: 'left',
+          }}
+        >
           <strong style={{ color: '#667eea' }}>💡 Tip:</strong> Make sure LM Studio is running on your computer at{' '}
           <code style={{ background: '#fff', padding: '2px 6px', borderRadius: '3px' }}>http://127.0.0.1:1234</code>
         </div>
